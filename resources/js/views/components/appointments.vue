@@ -15,50 +15,39 @@
         :key="appointment.id"
         class="p-6 hover:bg-emerald-50 transition duration-300 ease-in-out"
       >
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-lg font-semibold text-emerald-800">{{ appointment.tutor_name }}</p>
-            <p class="text-sm text-emerald-600">{{ appointment.subject }}</p>
-            <div class="flex items-center mt-2">
-              <CalendarIcon class="w-4 h-4 text-emerald-500 mr-1" />
-              <p class="text-sm text-emerald-700">
-                {{ formatDate(appointment.date) }}
-              </p>
+         <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-4">
+            <img 
+              :src="getAvatarUrl(appointment.users_info?.fullname)" 
+              :alt="appointment.users_info?.fullname" 
+              class="h-10 w-10 rounded-full"
+            />
+            <div>
+              <p class="font-medium text-gray-900">{{ appointment.users_info?.fullname }}</p>
+              <div class="flex items-center">
+                <p class="text-sm text-gray-500">{{ appointment.subject }}</p>
+                <span
+                  :class="{
+                    'ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full': true,
+                    'bg-yellow-100 text-yellow-800': appointment.isCompleted === null,
+                    'bg-green-100 text-green-800': appointment.isCompleted === true,
+                    'bg-red-100 text-red-800': appointment.isCompleted === false
+                  }"
+                >
+                  {{ appointment.isCompleted === null ? 'Pending' : appointment.isCompleted ? 'Accepted' : 'Declined' }}
+                </span>
+              </div>
             </div>
-            <div class="flex items-center mt-1">
-              <ClockIcon class="w-4 h-4 text-emerald-500 mr-1" />
-              <p class="text-sm text-emerald-700">
-                {{ appointment.start_time }} - {{ appointment.end_time }}
-              </p>
-            </div>
-            <div class="flex items-center mt-1">
-              <MapPinIcon class="w-4 h-4 text-emerald-500 mr-1" />
-              <p class="text-sm text-emerald-700">
-                {{ appointment.location }}
-              </p>
-            </div>
-            <p
-              :class="[
-                'inline-block mt-2 px-2 py-1 text-xs font-semibold rounded-full',
-                appointment.status === 'Confirmed'
-                  ? 'bg-emerald-100 text-emerald-800'
-                  : appointment.status === 'Pending'
-                  ? 'bg-yellow-100 text-yellow-800'
-                  : 'bg-red-100 text-red-800'
-              ]"
-            >
-              {{ appointment.status }}
-            </p>
           </div>
-          <div class="flex flex-col items-end">
-            <p class="text-sm font-medium text-emerald-600 mb-2">
-              {{ getDaysRemaining(appointment.date) }} days remaining
+          <div class="flex items-center space-x-2 px-4">
+            <p class="text-sm font-semibold text-teal-600">
+              {{ formatDate(appointment.preferred_time_date) }}
             </p>
             <button
               @click="viewDetails(appointment)"
-              class="px-4 py-2 bg-gradient-to-br from-emerald-300 via-teal-400 to-cyan-500 text-white rounded-xl shadow-md transition ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-opacity-50"
+              class="text-gray-400 hover:text-emerald-600 transition-colors duration-200"
             >
-              View Details
+              <InfoIcon class="h-5 w-5" />
             </button>
           </div>
         </div>
@@ -92,36 +81,20 @@
             leave-from="opacity-100 scale-100"
             leave-to="opacity-0 scale-95"
           >
-            <DialogPanel class="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-              <DialogTitle as="h3" class="text-lg font-medium leading-6 text-emerald-800">
+          <DialogPanel class="w-full max-w-md transform overflow-hidden rounded-lg bg-white p-6 text-left align-middle shadow-xl transition-all">
+            <DialogTitle as="h3" class="text-lg font-bold leading-6 text-emerald-800">
                 Appointment Details
               </DialogTitle>
-              <div class="mt-4">
-                <p class="text-sm text-emerald-600">Tutor: {{ selectedAppointment.tutor_name }}</p>
-                <p class="text-sm text-emerald-600 mt-1">Subject: {{ selectedAppointment.subject }}</p>
-                <p class="text-sm text-emerald-600 mt-1">Date: {{ formatDate(selectedAppointment.date) }}</p>
-                <p class="text-sm text-emerald-600 mt-1">Time: {{ selectedAppointment.start_time }} - {{ selectedAppointment.end_time }}</p>
-                <p class="text-sm text-emerald-600 mt-1">Location: {{ selectedAppointment.location }}</p>
-                <p class="text-sm text-emerald-600 mt-1">Status: {{ selectedAppointment.status }}</p>
+              <div class="mt-4 space-y-2">
+                <p class="text-md "> <strong>Tutor:</strong> {{ selectedAppointment.users_info?.fullname }}</p>
+                <p class="text-md mt-1"><strong>Subject: </strong>{{ selectedAppointment.subject }}</p>
+                <p class="text-md mt-1"><strong>Date: </strong>{{ formatDate(selectedAppointment.preferred_time_date) }}</p>
+                <p class="text-md mt-1"><strong>Location: </strong>{{ selectedAppointment.location }}</p>
+                <p class="text-md mt-1"><strong>Status: </strong> {{ selectedAppointment.isCompleted === null ? 'Pending' : selectedAppointment.isCompleted ? 'Accepted' : 'Declined' }}</p>
+                
               </div>
 
-              <div class="mt-6 flex justify-end space-x-3">
-                <button
-                  v-if="selectedAppointment.status === 'Pending'"
-                  type="button"
-                  class="inline-flex justify-center rounded-md border border-transparent bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
-                  @click="acceptAppointment"
-                >
-                  Accept
-                </button>
-                <button
-                  v-if="selectedAppointment.status === 'Pending'"
-                  type="button"
-                  class="inline-flex justify-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
-                  @click="declineAppointment"
-                >
-                  Decline
-                </button>
+              <div class="flex justify-end space-x-3">
                 <button
                   type="button"
                   class="inline-flex justify-center rounded-md border border-transparent bg-emerald-100 px-4 py-2 text-sm font-medium text-emerald-900 hover:bg-emerald-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
@@ -136,43 +109,98 @@
       </div>
     </Dialog>
   </TransitionRoot>
+
+  <!-- Alert component -->
+  <div v-if="showAlert" class="fixed inset-x-0 top-0 flex items-center justify-center">
+    <div :class="[ 
+      'p-4 rounded-md shadow-md text-white text-center transition-all duration-300 ease-in-out', 
+      alertType === 'success' ? 'bg-green-500' : 'bg-red-500' 
+    ]">
+      {{ alertMessage }}
+    </div>
+  </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
-import { CalendarIcon, ClockIcon, AlertCircleIcon, MapPinIcon } from 'lucide-vue-next'
-const bookanimation = '/img/book.gif';
+import { AlertCircleIcon, InfoIcon } from 'lucide-vue-next'
+import { supabase } from "@/supabaseClient"
 
+const bookanimation = '/img/book.gif'
 const appointments = ref([])
 const loading = ref(true)
 const error = ref(null)
 const showModal = ref(false)
 const selectedAppointment = ref({})
+const showAlert = ref(false)
+const alertMessage = ref('')
+const alertType = ref('success')
 
 const fetchAppointments = async () => {
   try {
-    // Simulating API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    appointments.value = [
-      { id: 1, tutor_name: 'John Doe', subject: 'Mathematics', date: '2024-12-20', start_time: '14:00', end_time: '15:00', status: 'Pending', location: 'Online (Zoom)' },
-      { id: 2, tutor_name: 'Jane Smith', subject: 'Physics', date: '2024-12-22', start_time: '10:00', end_time: '11:00', status: 'Confirmed', location: 'Room 101, Science Building' },
-      { id: 3, tutor_name: 'Alice Johnson', subject: 'Chemistry', date: '2024-12-25', start_time: '16:00', end_time: '17:00', status: 'Pending', location: 'Library Study Room 3' },
-      { id: 4, tutor_name: 'Deins Knows', subject: 'Chemistry', date: '2024-12-25', start_time: '16:00', end_time: '17:00', status: 'Pending', location: 'Online (Google Meet)' },
-      { id: 5, tutor_name: 'Emily Brown', subject: 'Literature', date: '2024-12-27', start_time: '13:00', end_time: '14:00', status: 'Confirmed', location: 'English Department Lounge' },
-      { id: 6, tutor_name: 'Michael Lee', subject: 'Computer Science', date: '2024-12-28', start_time: '11:00', end_time: '12:00', status: 'Pending', location: 'Computer Lab 2' },
-      { id: 7, tutor_name: 'Sarah Wilson', subject: 'Biology', date: '2024-12-30', start_time: '15:00', end_time: '16:00', status: 'Confirmed', location: 'Biology Lab 101' },
-      { id: 8, tutor_name: 'Robert Taylor', subject: 'History', date: '2025-01-02', start_time: '14:00', end_time: '15:00', status: 'Pending', location: 'History Department Conference Room' },
-    ]
-    loading.value = false
+    loading.value = true
+    
+    // First get the current user's ID
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError) throw authError
+
+    // Then get the users_info record for the current user
+    const { data: userInfo, error: userError } = await supabase
+      .from('users_info')
+      .select('id')
+      .eq('auth_users_id', user.id)
+      .single()
+    if (userError) throw userError
+
+    // Finally fetch only the transactions where the user is involved
+    const { data, error: fetchError } = await supabase
+      .from('transactions')
+      .select(`
+        *,
+        user_transactions (
+          users_info_id,
+          users_info (
+            id,
+            fullname,
+            occupation,
+            university,
+            specialization
+          )
+        )
+      `)
+      .order('preferred_time_date', { ascending: true })
+
+    if (fetchError) throw fetchError
+
+    // Transform the nested data structure
+    appointments.value = data.flatMap(appointment => {
+      return appointment.user_transactions
+        .filter(transaction => transaction.users_info_id === userInfo.id)
+        .map(transaction => {
+          const otherUserTransaction = appointment.user_transactions.find(
+            t => t.users_info_id !== userInfo.id
+          );
+          
+          return {
+            ...appointment,
+            users_info: otherUserTransaction?.users_info,
+            tutor_id: otherUserTransaction?.users_info_id,
+            isCompleted: appointment.isCompleted === null ? null : appointment.isCompleted
+          }
+        })
+    })
   } catch (e) {
+    console.error('Error:', e)
     error.value = 'Failed to load appointments. Please try again.'
+  } finally {
     loading.value = false
   }
 }
 
+
 const viewDetails = (appointment) => {
-  selectedAppointment.value = appointment
+  selectedAppointment.value = { ...appointment }
   showModal.value = true
 }
 
@@ -180,48 +208,53 @@ const closeModal = () => {
   showModal.value = false
 }
 
-const acceptAppointment = async () => {
+const updateAppointmentStatus = async (status) => {
   try {
-    // Simulating API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    const { data, error } = await supabase
+      .from('transactions')
+      .update({ isCompleted: status })
+      .eq('id', selectedAppointment.value.id)
+
+    if (error) throw error
+
     const index = appointments.value.findIndex(a => a.id === selectedAppointment.value.id)
     if (index !== -1) {
-      appointments.value[index].status = 'Confirmed'
-      selectedAppointment.value.status = 'Confirmed'
+      appointments.value[index].isCompleted = status
+      selectedAppointment.value.isCompleted = status
     }
-    // You would typically make an API call here to update the appointment status
+
+    showAlert.value = true
+    alertType.value = 'success'
+    alertMessage.value = status ? 'Appointment accepted successfully!' : 'Appointment declined successfully!'
+    
+    setTimeout(() => {
+      showAlert.value = false
+    }, 3000)
+
     closeModal()
   } catch (e) {
-    error.value = 'Failed to accept appointment. Please try again.'
+    console.error('Error:', e)
+    showAlert.value = true
+    alertType.value = 'error'
+    alertMessage.value = `Failed to ${status ? 'accept' : 'decline'} appointment. Please try again.`
+    
+    setTimeout(() => {
+      showAlert.value = false
+    }, 3000)
   }
 }
 
-const declineAppointment = async () => {
-  try {
-    // Simulating API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    const index = appointments.value.findIndex(a => a.id === selectedAppointment.value.id)
-    if (index !== -1) {
-      appointments.value[index].status = 'Declined'
-      selectedAppointment.value.status = 'Declined'
-    }
-    // You would typically make an API call here to update the appointment status
-    closeModal()
-  } catch (e) {
-    error.value = 'Failed to decline appointment. Please try again.'
-  }
-}
+const acceptAppointment = () => updateAppointmentStatus(true)
+const declineAppointment = () => updateAppointmentStatus(false)
 
 const formatDate = (date) => {
+  if (!date) return 'No date specified'
   const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
   return new Date(date).toLocaleDateString(undefined, options)
 }
 
-const getDaysRemaining = (date) => {
-  const today = new Date()
-  const appointmentDate = new Date(date)
-  const diffTime = Math.max(appointmentDate - today, 0)
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+const getAvatarUrl = (name) => {
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`
 }
 
 onMounted(() => {
@@ -230,14 +263,13 @@ onMounted(() => {
 </script>
 
 <style>
-/* Hide scrollbar for Chrome, Safari and Opera */
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
 
-/* Hide scrollbar for IE, Edge and Firefox */
 .scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 </style>
+

@@ -246,8 +246,9 @@
 <script setup>
 import { useRouter } from "vue-router";
 import { ref } from "vue";
-import { supabase } from "@/supabaseClient"; // Adjust the import to your Supabase client location
+import { supabase } from "@/supabaseClient"; // Ensure this path matches your project structure
 import { GraduationCap, User, Mail, Eye, EyeOff, LockIcon } from "lucide-vue-next";
+
 
 const isLogin = ref(true);
 const name = ref("");
@@ -349,6 +350,7 @@ const handleSubmit = async () => {
     }
   }
 };
+
 // Google OAuth logic
 const signInWithGoogle = async () => {
   try {

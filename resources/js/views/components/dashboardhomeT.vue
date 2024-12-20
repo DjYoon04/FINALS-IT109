@@ -15,29 +15,32 @@
               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
             'group inline-flex items-center justify-center sm:py-4 border-b-2 font-medium text-sm transition-all'
           ]"
-          :aria-current="currentTab === tab.name ? 'page' : undefined"
-        >
-          <!-- Icon -->
+          :aria-current="currentTab === tab.name ? 'page' : undefined">
           <component
             :is="tab.icon"
-            :class="[ 
-              currentTab === tab.name ? 'text-emerald-500' : 'text-gray-400 group-hover:text-gray-500',
-              'h-5 w-5 sm:mr-2'
+            :class="[ currentTab === tab.name ? 'text-emerald-500' : 'text-gray-400 group-hover:text-gray-500','h-5 w-5 sm:mr-2'
             ]"
-            aria-hidden="true"
-          />
-          <!-- Tab Name -->
+            aria-hidden="true"/>
           <span class="hidden sm:inline pr-5">{{ tab.name }}</span>
         </button>
       </nav>
     </div>
 
-
     <!-- Tab Contents -->
     <div class="p-4 overflow-y-auto max-h-[calc(100vh-120px)] scrollbar-hide pb-12">
+      <!-- Loading State -->
+      <div v-if="loading" class="flex justify-center items-center h-64">
+        <div class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-emerald-500"></div>
+      </div>
+
+      <!-- Error State -->
+      <div v-else-if="error" class="text-red-500 text-center">
+        {{ error }}
+      </div>
+
       <!-- Upcoming Appointments -->
       <TransitionGroup
-        v-if="currentTab === 'Upcoming Appointments'"
+        v-else-if="currentTab === 'Upcoming Appointments'"
         name="list"
         tag="ul"
         class="space-y-1"
@@ -50,18 +53,18 @@
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-4">
               <img 
-                :src="getAvatarUrl(appointment.student)" 
-                :alt="appointment.student" 
+                :src="getAvatarUrl(appointment.users_info?.fullname)" 
+                :alt="appointment.users_info?.fullname" 
                 class="h-10 w-10 rounded-full"
               />
               <div>
-                <p class="font-medium text-gray-900">{{ appointment.student }}</p>
+                <p class="font-medium text-gray-900">{{ appointment.users_info?.fullname }}</p>
                 <p class="text-sm text-gray-500">{{ appointment.subject }}</p>
               </div>
             </div>
             <div class="flex items-center space-x-2 px-4">
               <p class="text-sm font-semibold text-teal-600">
-                {{ appointment.preferredendstart }}
+                {{ formatDate(appointment.preferred_time_date) }}
               </p>
               <button
                 @click="openDetailsModal(appointment)"
@@ -74,9 +77,9 @@
         </li>
       </TransitionGroup>
 
-      <!-- Appointment History -->
+      <!-- Past Appointments -->
       <TransitionGroup
-        v-if="currentTab === 'Appointment History'"
+        v-else-if="currentTab === 'Appointment History'"
         name="list"
         tag="ul"
         class="space-y-1"
@@ -88,49 +91,58 @@
         >
           <div class="flex justify-between items-center">
             <div>
-              <p class="font-medium text-gray-900">{{ appointment.subject }}</p>
-              <p class="text-sm text-gray-500">{{ appointment.student }}</p>
+              <p class="font-medium text-gray-900">{{ appointment.users_info?.fullname }}</p>
+              <p class="text-sm text-gray-500">{{ appointment.subject }}</p>
             </div>
-            <button
-              @click="openDetailsModal(appointment)"
-              class="text-gray-400 hover:text-emerald-600 transition-colors duration-200"
-            >
-              <InfoIcon class="h-5 w-5 mr-4" />
-            </button>
+            <div class="flex items-center space-x-2">
+              <p class="text-sm font-semibold text-teal-600">
+                {{ formatDate(appointment.preferred_time_date) }}
+              </p>
+              <button
+                @click="openDetailsModal(appointment)"
+                class="text-gray-400 hover:text-emerald-600 transition-colors duration-200"
+              >
+                <InfoIcon class="h-5 w-5" />
+              </button>
+            </div>
           </div>
         </li>
       </TransitionGroup>
 
       <!-- Recent Students -->
       <TransitionGroup
-        v-if="currentTab === 'Recent Students'"
+        v-else-if="currentTab === 'Recent Students'"
         name="list"
         tag="ul"
         class="space-y-1"
       >
         <li
-          v-for="student in favoriteStudents"
-          :key="student.id"
+          v-for="tutor in recentTutors"
+          :key="tutor.id"
           class="p-4 hover:bg-emerald-50 rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-200 ease-in-out"
         >
           <div class="flex items-start space-x-4">
             <img 
-              :src="getAvatarUrl(student.student)"
-              :alt="student.student"
+              :src="getAvatarUrl(tutor.fullname)"
+              :alt="tutor.fullname"
               class="h-10 w-10 rounded-full"
             />
             <div class="flex-grow">
-              <p class="font-medium text-gray-900">{{ student.student }}</p>
-              <p class="text-sm text-gray-500">{{ student.subjects.join(', ') }}</p>
+              <p class="font-medium text-gray-900">{{ tutor.fullname }}</p>
+              <p class="text-sm text-gray-500">{{ tutor.lastSubject }}</p>
               <div class="mt-2 space-y-2">
                 <div
-                  v-for="(comment, index) in student.comments"
-                  :key="index"
+                  v-for="review in tutor.review_list"
+                  :key="review.id"
                   class="flex items-center justify-between bg-gray-50 rounded p-2"
                 >
-                  <p class="text-sm text-gray-700">{{ comment }}</p>
+                  <div class="flex flex-col">
+                    <div class="flex items-center space-x-1">
+                    </div>
+                    <p class="text-sm text-gray-700 mt-1">{{ review.comments }}</p>
+                  </div>
                   <button
-                    @click="openEditCommentModal(student.id, index)"
+                    @click="openEditReviewModal(tutor.id, review.id)"
                     class="text-gray-400 hover:text-emerald-600 transition-colors duration-200"
                   >
                     <PencilIcon class="h-4 w-4" />
@@ -139,12 +151,9 @@
               </div>
             </div>
             <button
-              @click="openCommentModal(student)"
-              class="flex items-center space-x-1 bg-emerald-100 text-teal-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-emerald-200 transition-colors duration-200"
+              @click="openRateModal(tutor)"
+              class="flex items-center space-x-1 bg-emerald-100 text-teal-700 px-3 mt-2 py-2 rounded-lg text-sm font-medium hover:bg-emerald-200 transition-colors duration-200"
             >
-              <!-- Icon -->
-              <MessageCircle class="w-4 h-4" />
-              <!-- Text -->
               <span>Comment</span>
             </button>
           </div>
@@ -153,8 +162,8 @@
     </div>
   </div>
   
- <!-- Appointment Details Modal -->
- <TransitionRoot appear :show="isAppointmentModalVisible" as="template">
+  <!-- Appointment Details Modal -->
+  <TransitionRoot appear :show="isAppointmentModalVisible" as="template">
     <Dialog as="div" @close="closeAppointmentModal" class="relative z-50">
       <TransitionChild
         as="template"
@@ -191,12 +200,11 @@
               </div>
 
               <div class="mt-4 space-y-2">
-                <p><strong>Student:</strong> {{ selectedAppointment?.student }}</p>
+                <p><strong>Student:</strong> {{ selectedAppointment?.users_info?.fullname }}</p>
                 <p><strong>Subject:</strong> {{ selectedAppointment?.subject }}</p>
-                <p><strong>Time:</strong> {{ selectedAppointment?.preferredtimestart }} - {{ selectedAppointment?.preferredendstart }}</p>
                 <p><strong>Location:</strong> {{ selectedAppointment?.location }}</p>
                 <p><strong>Type:</strong> {{ selectedAppointment?.type }}</p>
-                <p><strong>Date:</strong> {{ selectedAppointment?.date }}</p>
+                <p><strong>Date and Time:</strong> {{ formatDate(selectedAppointment?.preferred_time_date) }}</p>
               </div>
 
               <div class="mt-6 flex justify-end space-x-4">
@@ -214,10 +222,9 @@
     </Dialog>
   </TransitionRoot>
 
-
-  <!-- Comment Modal -->
-  <TransitionRoot appear :show="isCommentModalVisible" as="template">
-    <Dialog as="div" @close="closeCommentModal" class="relative z-10">
+  <!-- Rate Modal -->
+  <TransitionRoot appear :show="isRateModalVisible" as="template">
+    <Dialog as="div" @close="closeRateModal" class="relative z-10">
       <TransitionChild
         as="template"
         enter="ease-out duration-300"
@@ -243,14 +250,25 @@
           >
             <DialogPanel class="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
               <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900">
-                Add Comment for {{ selectedStudent?.student }}
+                Comment {{ selectedTutor?.fullname }}
               </DialogTitle>
-              <div class="mt-2">
+              <div class="mt-4">
+                <div class="flex items-center justify-center space-x-2">
+                  <Star
+                    v-for="i in 5"
+                    :key="i"
+                    :class="[
+                      i <= rating ? 'text-yellow-400' : 'text-gray-300',
+                      'h-8 w-8 fill-current cursor-pointer transition-colors duration-150'
+                    ]"
+                    @click="rating = i"
+                  />
+                </div>
                 <textarea
                   v-model="newComment"
                   rows="4"
-                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-300 focus:ring focus:ring-emerald-200 focus:ring-opacity-50"
-                  placeholder="Enter your comment here..."
+                  class="w-full mt-4 rounded-md border-gray-300 shadow-sm focus:border-emerald-300 focus:ring focus:ring-emerald-200 focus:ring-opacity-50"
+                  placeholder="Add a comment (optional)"
                 ></textarea>
               </div>
 
@@ -258,14 +276,14 @@
                 <button
                   type="button"
                   class="inline-flex justify-center rounded-md border border-transparent bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2"
-                  @click="closeCommentModal"
+                  @click="closeRateModal"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   class="inline-flex justify-center rounded-md border border-transparent bg-emerald-100 px-4 py-2 text-sm font-medium text-emerald-900 hover:bg-emerald-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
-                  @click="submitComment"
+                  @click="submitRating"
                 >
                   Submit
                 </button>
@@ -277,9 +295,9 @@
     </Dialog>
   </TransitionRoot>
 
-  <!-- Edit Comment Modal -->
-  <TransitionRoot appear :show="isEditCommentModalVisible" as="template">
-    <Dialog as="div" @close="closeEditCommentModal" class="relative z-10">
+  <!-- Edit Review Modal -->
+  <TransitionRoot appear :show="isEditReviewModalVisible" as="template">
+    <Dialog as="div" @close="closeEditReviewModal" class="relative z-10">
       <TransitionChild
         as="template"
         enter="ease-out duration-300"
@@ -305,13 +323,24 @@
           >
             <DialogPanel class="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
               <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900">
-                Edit Comment
+                Edit Review
               </DialogTitle>
-              <div class="mt-2">
+              <div class="mt-4">
+                <div class="flex items-center justify-center space-x-2">
+                  <Star
+                    v-for="i in 5"
+                    :key="i"
+                    :class="[
+                      i <= editedRating ? 'text-yellow-400' : 'text-gray-300',
+                      'h-8 w-8 fill-current cursor-pointer transition-colors duration-150'
+                    ]"
+                    @click="editedRating = i"
+                  />
+                </div>
                 <textarea
                   v-model="editedComment"
                   rows="4"
-                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-300 focus:ring focus:ring-emerald-200 focus:ring-opacity-50"
+                  class="w-full mt-4 rounded-md border-gray-300 shadow-sm focus:border-emerald-300 focus:ring focus:ring-emerald-200 focus:ring-opacity-50"
                   placeholder="Edit your comment here..."
                 ></textarea>
               </div>
@@ -320,21 +349,21 @@
                 <button
                   type="button"
                   class="inline-flex justify-center rounded-md border border-transparent bg-red-100 px-4 py-2 text-sm font-medium text-red-900 hover:bg-red-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
-                  @click="deleteComment"
+                  @click="deleteReview"
                 >
                   Delete
                 </button>
                 <button
                   type="button"
                   class="inline-flex justify-center rounded-md border border-transparent bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2"
-                  @click="closeEditCommentModal"
+                  @click="closeEditReviewModal"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   class="inline-flex justify-center rounded-md border border-transparent bg-emerald-100 px-4 py-2 text-sm font-medium text-emerald-900 hover:bg-emerald-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
-                  @click="saveEditedComment"
+                  @click="saveEditedReview"
                 >
                   Save
                 </button>
@@ -348,8 +377,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { CalendarIcon, ClockIcon, UsersIcon, InfoIcon, PencilIcon, MessageCircle } from 'lucide-vue-next';
+import { ref, computed, onMounted } from 'vue';
+import { supabase } from "@/supabaseClient"
+import { CalendarIcon, ClockIcon, UsersIcon, InfoIcon, PencilIcon, Star } from 'lucide-vue-next';
 import {
   TransitionRoot,
   TransitionChild,
@@ -361,48 +391,28 @@ import {
 // State
 const currentTab = ref("Upcoming Appointments");
 const isAppointmentModalVisible = ref(false);
-const isCommentModalVisible = ref(false);
-const isEditCommentModalVisible = ref(false);
+const isRateModalVisible = ref(false);
+const isEditReviewModalVisible = ref(false);
 const selectedAppointment = ref(null);
-const selectedStudent = ref(null);
+const selectedTutor = ref(null);
+const rating = ref(0);
 const newComment = ref('');
+const editedRating = ref(0);
 const editedComment = ref('');
-const editingStudentId = ref(null);
-const editingCommentIndex = ref(null);
+const editingReviewId = ref(null);
+const appointments = ref([]);
+const recentTutors = ref([]);
+const loading = ref(true);
+const error = ref(null);
 
-const upcomingAppointments = ref([
-  { id: 1, student: "Bernie Cherry Rante", subject: "Chemistry", preferredtimestart: "10:00 AM", preferredendstart: "11:00 AM", location: "Online", type: "Video Call", date: "2024-12-12" },
-  { id: 2, student: "Jeseca Ruelan", subject: "Calculus 1", preferredtimestart: "10:00 AM", preferredendstart: "11:00 AM", location: "Library", type: "In-person", date: "2024-12-11" },
-  { id: 3, student: "Kurt Reserva", subject: "Mathematics", preferredtimestart: "10:00 AM", preferredendstart: "11:00 AM", location: "Online", type: "Video Call", date: "2024-12-12" },
-  { id: 4, student: "Runard Ramos", subject: "Physics", preferredtimestart: "10:00 AM", preferredendstart: "11:00 AM", location: "Library", type: "In-person", date: "2024-12-11" },
-  { id: 5, student: "Lawrence Sabrido", subject: "Advanced Physics", preferredtimestart: "10:00 AM", preferredendstart: "11:00 AM", location: "Online", type: "Video Call", date: "2024-12-12" },
-  { id: 1, student: "Bernie Cherry Rante", subject: "Chemistry", preferredtimestart: "10:00 AM", preferredendstart: "11:00 AM", location: "Online", type: "Video Call", date: "2024-12-12" },
-  { id: 2, student: "Jeseca Ruelan", subject: "Calculus 1", preferredtimestart: "10:00 AM", preferredendstart: "11:00 AM", location: "Library", type: "In-person", date: "2024-12-11" },
-  { id: 3, student: "Kurt Reserva", subject: "Mathematics", preferredtimestart: "10:00 AM", preferredendstart: "11:00 AM", location: "Online", type: "Video Call", date: "2024-12-12" },
-  { id: 4, student: "Runard Ramos", subject: "Physics", preferredtimestart: "10:00 AM", preferredendstart: "11:00 AM", location: "Library", type: "In-person", date: "2024-12-11" },
-  { id: 5, student: "Lawrence Sabrido", subject: "Advanced Physics", preferredtimestart: "10:00 AM", preferredendstart: "11:00 AM", location: "Online", type: "Video Call", date: "2024-12-12" },
-  
-]);
+// Computed properties
+const upcomingAppointments = computed(() => 
+  appointments.value.filter(apt => new Date(apt.preferred_time_date) > new Date())
+);
 
-const pastAppointments = ref([
-  { id: 1, student: "Bernie Cherry Rante", subject: "Chemistry", preferredtimestart: "10:00 AM", preferredendstart: "11:00 AM", location: "Online", type: "Video Call", date: "2024-12-12" },
-  { id: 2, student: "Jeseca Ruelan", subject: "Calculus 1", preferredtimestart: "10:00 AM", preferredendstart: "11:00 AM", location: "Library", type: "In-person", date: "2024-12-11" },
-  { id: 3, student: "Kurt Reserva", subject: "Mathematics", preferredtimestart: "10:00 AM", preferredendstart: "11:00 AM", location: "Online", type: "Video Call", date: "2024-12-12" },
-  { id: 4, student: "Runard Ramos", subject: "Physics", preferredtimestart: "10:00 AM", preferredendstart: "11:00 AM", location: "Library", type: "In-person", date: "2024-12-11" },
-  { id: 5, student: "Lawrence Sabrido", subject: "Advanced Physics", preferredtimestart: "10:00 AM", preferredendstart: "11:00 AM", location: "Online", type: "Video Call", date: "2024-12-12" },
-  { id: 1, student: "Bernie Cherry Rante", subject: "Chemistry", preferredtimestart: "10:00 AM", preferredendstart: "11:00 AM", location: "Online", type: "Video Call", date: "2024-12-12" },
-  { id: 2, student: "Jeseca Ruelan", subject: "Calculus 1", preferredtimestart: "10:00 AM", preferredendstart: "11:00 AM", location: "Library", type: "In-person", date: "2024-12-11" },
-  { id: 3, student: "Kurt Reserva", subject: "Mathematics", preferredtimestart: "10:00 AM", preferredendstart: "11:00 AM", location: "Online", type: "Video Call", date: "2024-12-12" },
-  { id: 4, student: "Runard Ramos", subject: "Physics", preferredtimestart: "10:00 AM", preferredendstart: "11:00 AM", location: "Library", type: "In-person", date: "2024-12-11" },
-  { id: 5, student: "Lawrence Sabrido", subject: "Advanced Physics", preferredtimestart: "10:00 AM", preferredendstart: "11:00 AM", location: "Online", type: "Video Call", date: "2024-12-12" },
-  
-]);
-
-const favoriteStudents = ref([
-  { id: 1, student: "Bernie Cherry Rante", subjects: ["Chemistry", "Physics"], comments: [] },
-  { id: 2, student: "Jeseca Ruelan", subjects: ["Calculus", "Algebra"], comments: [] },
-  { id: 3, student: "Kurt Reserva", subjects: ["Mathematics", "Statistics"], comments: [] },
-]);
+const pastAppointments = computed(() => 
+  appointments.value.filter(apt => new Date(apt.preferred_time_date) <= new Date())
+);
 
 // Tabs data
 const tabs = [
@@ -412,12 +422,122 @@ const tabs = [
 ];
 
 // Methods
+const fetchAppointments = async () => {
+  try {
+    loading.value = true
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError) throw authError
+
+    const { data: userInfo, error: userError } = await supabase
+      .from('users_info')
+      .select('id')
+      .eq('auth_users_id', user.id)
+      .single()
+    if (userError) throw userError
+
+    const { data, error: fetchError } = await supabase
+      .from('transactions')
+      .select(`
+        *,
+        user_transactions (
+          users_info_id,
+          users_info (
+            id,
+            fullname,
+            occupation,
+            university,
+            specialization
+          )
+        )
+      `)
+      .eq('isCompleted', true)
+      .order('preferred_time_date', { ascending: false })
+
+    if (fetchError) throw fetchError
+
+    appointments.value = data.flatMap(appointment => {
+      return appointment.user_transactions
+        .filter(transaction => transaction.users_info_id === userInfo.id)
+        .map(transaction => {
+          const otherUserTransaction = appointment.user_transactions.find(
+            t => t.users_info_id !== userInfo.id
+          );
+          
+          return {
+            ...appointment,
+            users_info: otherUserTransaction?.users_info,
+            tutor_id: otherUserTransaction?.users_info_id,
+            isCompleted: true
+          }
+        })
+    })
+
+    // Process recent students
+    const tutorsMap = new Map();
+    appointments.value.forEach(appointment => {
+      if (!tutorsMap.has(appointment.tutor_id)) {
+        tutorsMap.set(appointment.tutor_id, {
+          id: appointment.tutor_id,
+          fullname: appointment.users_info.fullname,
+          lastSubject: appointment.subject,
+          userReview: null
+        });
+      }
+    });
+
+    // Fetch reviews for these tutors
+    const { data: reviews, error: reviewsError } = await supabase
+      .from('review_list')
+      .select(`
+        *,
+        reviews (
+          id,
+          star,
+          comments
+        )
+      `)
+      .eq('reviews_id', userInfo.id)
+      .in('users_info_id', Array.from(tutorsMap.keys()));
+
+    if (reviewsError) throw reviewsError;
+
+    // Add reviews to tutors
+    reviews.forEach(review => {
+      const tutor = tutorsMap.get(review.users_info_id);
+      if (tutor) {
+        tutor.userReview = review.reviews;
+      }
+    });
+
+    recentTutors.value = Array.from(tutorsMap.values());
+
+  } catch (e) {
+    console.error('Error:', e)
+    error.value = 'Failed to load appointments and reviews. Please try again.'
+  } finally {
+    loading.value = false
+  }
+}
+
 function setCurrentTab(tabName) {
   currentTab.value = tabName;
 }
 
 function getAvatarUrl(name) {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`
+}
+
+function formatDate(dateString) {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleString('en-US', { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric', 
+    hour: '2-digit', 
+    minute: '2-digit'
+  });
 }
 
 function openDetailsModal(appointment) {
@@ -430,63 +550,126 @@ function closeAppointmentModal() {
   selectedAppointment.value = null;
 }
 
-function openCommentModal(student) {
-  selectedStudent.value = student;
-  isCommentModalVisible.value = true;
+function openRateModal(tutor) {
+  selectedTutor.value = tutor;
+  rating.value = 0;
+  newComment.value = '';
+  isRateModalVisible.value = true;
 }
 
-function closeCommentModal() {
-  isCommentModalVisible.value = false;
-  selectedStudent.value = null;
+function closeRateModal() {
+  isRateModalVisible.value = false;
+  selectedTutor.value = null;
+  rating.value = 0;
   newComment.value = '';
 }
 
-function submitComment() {
-  if (selectedStudent.value && newComment.value.trim()) {
-    const student = favoriteStudents.value.find(s => s.id === selectedStudent.value.id);
-    if (student) {
-      student.comments.push(newComment.value.trim());
+function openEditReviewModal(tutorId, reviewId) {
+  const tutor = recentTutors.value.find(t => t.id === tutorId);
+  if (tutor) {
+    const review = tutor.review_list.find(r => r.id === reviewId);
+    if (review) {
+      editingReviewId.value = reviewId;
+      editedRating.value = review.star;
+      editedComment.value = review.comments || '';
+      isEditReviewModalVisible.value = true;
     }
   }
-  closeCommentModal();
 }
 
-function openEditCommentModal(studentId, commentIndex) {
-  const student = favoriteStudents.value.find(s => s.id === studentId);
-  if (student) {
-    editingStudentId.value = studentId;
-    editingCommentIndex.value = commentIndex;
-    editedComment.value = student.comments[commentIndex];
-    isEditCommentModalVisible.value = true;
-  }
-}
-
-function closeEditCommentModal() {
-  isEditCommentModalVisible.value = false;
-  editingStudentId.value = null;
-  editingCommentIndex.value = null;
+function closeEditReviewModal() {
+  isEditReviewModalVisible.value = false;
+  editingReviewId.value = null;
+  editedRating.value = 0;
   editedComment.value = '';
 }
 
-function saveEditedComment() {
-  if (editingStudentId.value !== null && editingCommentIndex.value !== null) {
-    const student = favoriteStudents.value.find(s => s.id === editingStudentId.value);
-    if (student) {
-      student.comments[editingCommentIndex.value] = editedComment.value.trim();
+async function submitRating() {
+  if (selectedTutor.value && rating.value > 0) {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: userInfo } = await supabase
+        .from('users_info')
+        .select('id')
+        .eq('auth_users_id', user.id)
+        .single();
+
+      // First, insert the review
+      const { data: reviewData, error: reviewError } = await supabase
+        .from('reviews')
+        .insert({
+          star: rating.value,
+          comments: newComment.value.trim() || null,
+        })
+        .select()
+        .single();
+
+      if (reviewError) throw reviewError;
+
+      // Then, create the association in review_list
+      const { data, error } = await supabase
+        .from('review_list')
+        .insert({
+          users_info_id: userInfo.id,
+          reviews_id: reviewData.id,
+          users_info_id: selectedTutor.value.id  // Add this line to associate with the tutor
+        });
+
+      if (error) throw error;
+
+      await fetchAppointments();
+      closeRateModal();
+    } catch (error) {
+      console.error('Error submitting rating:', error);
     }
   }
-  closeEditCommentModal();
 }
 
-function deleteComment() {
-  if (editingStudentId.value !== null && editingCommentIndex.value !== null) {
-    const student = favoriteStudents.value.find(s => s.id === editingStudentId.value);
-    if (student) {
-      student.comments.splice(editingCommentIndex.value, 1);
+async function saveEditedReview() {
+  if (editingReviewId.value && editedRating.value > 0) {
+    try {
+      const { data, error } = await supabase
+        .from('review_list')
+        .update({
+          star: editedRating.value,
+          comments: editedComment.value.trim() || null,
+        })
+        .eq('id', editingReviewId.value);
+
+      if (error) throw error;
+
+      // Refresh the tutors data to show the updated rating
+      await fetchAppointments();
+      closeEditReviewModal();
+    } catch (error) {
+      console.error('Error updating review:', error);
     }
   }
-  closeEditCommentModal();
 }
+
+async function deleteReview() {
+  if (editingReviewId.value) {
+    try {
+      const { data, error } = await supabase
+        .from('review_list')
+        .delete()
+        .eq('id', editingReviewId.value);
+
+      if (error) throw error;
+
+      // Refresh the tutors data to remove the deleted review
+      await fetchAppointments();
+      closeEditReviewModal();
+    } catch (error) {
+      console.error('Error deleting review:', error);
+    }
+  }
+}
+
+// Fetch initial data
+onMounted(() => {
+  fetchAppointments();
+});
 </script>
 
 <style>
@@ -510,3 +693,4 @@ function deleteComment() {
   scrollbar-width: none;  /* Firefox */
 }
 </style>
+
