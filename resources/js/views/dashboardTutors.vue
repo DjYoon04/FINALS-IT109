@@ -26,11 +26,11 @@
         </nav>
         <div class="mt-44 mb-8">
           <button
-            @click="isProfileOpen = true"
-            class="flex items-center space-x-3 rounded-lg px-4 py-3 text-white transition-colors duration-200 ease-in-out hover:bg-white hover:bg-opacity-20 w-full"
-          >
-            <SettingsIcon class="h-5 w-5" />
-            <span class="font-medium">Settings</span>
+            @click="logOut"
+              class="flex w-full items-center space-x-3 rounded-lg px-4 py-3 text-white hover:bg-teal-50 hover:text-teal-800  transition-colors duration-200 ease-in-out"
+              >
+              <LogOutIcon class="h-5 w-5" />
+              <span class="font-medium">Log Out</span>
           </button>
         </div>
       </aside>
@@ -52,19 +52,6 @@
           v-if="isMobileMenuOpen"
           class="lg:hidden bg-white bg-opacity-20 backdrop-blur-lg p-4 overflow-y-auto"
         >
-          <div class="flex flex-col items-center mb-6">
-            <div
-              class="relative h-24 w-24 rounded-full overflow-hidden mb-4 border-2 border-white"
-            >
-              <img
-                :src="Studentimg"
-                alt="Profile picture"
-                class="h-full w-full object-cover"
-              />
-            </div>
-            <h2 class="text-xl font-semibold text-white">Bernie Cherry D. Rante</h2>
-            <p class="text-sm text-white text-opacity-80">Student</p>
-          </div>
           <div class="space-y-2">
             <a
               v-for="item in navItems"
@@ -81,14 +68,11 @@
               <span class="font-medium">{{ item.name }}</span>
             </a>
             <button
-              @click="
-                isProfileOpen = true;
-                isMobileMenuOpen = false;
-              "
-              class="flex items-center space-x-3 rounded-lg px-4 py-3 text-white transition-colors duration-200 ease-in-out hover:bg-white hover:bg-opacity-20 w-full"
-            >
-              <SettingsIcon class="h-5 w-5" />
-              <span class="font-medium">Settings</span>
+            @click="logOut"
+              class="flex w-full items-center space-x-3 rounded-lg px-4 py-3 text-white hover:bg-teal-50 hover:text-teal-800  transition-colors duration-200 ease-in-out"
+              >
+              <LogOutIcon class="h-5 w-5" />
+              <span class="font-medium">Log Out</span>
             </button>
           </div>
         </nav>
