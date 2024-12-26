@@ -188,19 +188,6 @@
             </button>
           </div>
         </form>
-        <div class="mt-4">
-          <button
-            @click="signInWithGoogle"
-            class="w-full px-4 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition duration-300 ease-in-out flex items-center justify-center transition duration-300 ease-in-out transform hover:scale-105"
-          >
-            <img
-              src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-              alt="Google"
-              class="w-6 h-6 mr-2 object-contain"
-            />
-            Sign up with Google
-          </button>
-        </div>
       </div>
 
       <!-- Overlay Container -->
@@ -243,6 +230,8 @@
     </div>
   </div>
 </template>
+
+
 <script setup>
 import { useRouter } from "vue-router";
 import { ref } from "vue";
@@ -276,28 +265,28 @@ const resetForm = () => {
 const togglePasswordVisibility = () => {
   showPassword.value = !showPassword.value;
 };
-
 const handleSubmit = async () => {
   if (isLogin.value) {
-    // Sign-In logic
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: email.value,
         password: password.value,
       });
 
-      if (error) throw error;
+      if (authError) throw authError;
 
-      // Fetch user details from users_info
+      // Query the auth.users table directly to retrieve user ID
+      const authUserId = authData.user.id;
+
+      // Fetch user info from users_info table using the correct auth_users_id
       const { data: userInfo, error: userInfoError } = await supabase
         .from("users_info")
         .select("occupation")
-        .eq("email", email.value)
+        .eq("auth_users_id", authUserId) // Ensure you're using the right column here
         .single();
 
       if (userInfoError) throw userInfoError;
 
-      // Route based on occupation
       if (userInfo.occupation === "Student") {
         router.push("/dashboard");
       } else if (userInfo.occupation === "Tutor") {
@@ -310,7 +299,6 @@ const handleSubmit = async () => {
       alert("Failed to log in. Please check your email and password.");
     }
   } else {
-    // Sign-Up logic
     if (password.value !== confirmPassword.value) {
       alert("Passwords don't match");
       return;
@@ -322,7 +310,7 @@ const handleSubmit = async () => {
     }
 
     try {
-      // Sign up the user in auth.users
+      // Register the user in the auth.users table
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: email.value,
         password: password.value,
@@ -330,14 +318,18 @@ const handleSubmit = async () => {
 
       if (authError) throw authError;
 
-      // Insert user details into users_info
+      if (!authData.user?.id) throw new Error("Missing user ID.");
+
+      const authUserId = authData.user.id;
+
+      // Insert the user profile into the users_info table
       const { data: userInfo, error: userInfoError } = await supabase
         .from("users_info")
         .insert({
           email: email.value,
           fullname: name.value,
-          occupation: userType.value, // Use selected occupation
-          auth_users_id: authData.user.id, // Map the user's unique id
+          occupation: userType.value,
+          auth_users_id: authUserId, // Use auth_users_id as the foreign key
         });
 
       if (userInfoError) throw userInfoError;
@@ -350,6 +342,7 @@ const handleSubmit = async () => {
     }
   }
 };
+
 
 // Google OAuth logic
 const signInWithGoogle = async () => {

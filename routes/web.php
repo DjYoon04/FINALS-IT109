@@ -18,3 +18,8 @@ Route::get('/Auth', function () {
     return view('app'); 
 });
 
+// Serve the Vue app for any route not explicitly defined in Laravel
+Route::get('/{any}', function () {
+    return view('app'); // Ensure this matches your main Vue app view file
+})->where('any', '.*');
+

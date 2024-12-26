@@ -30,7 +30,10 @@
     <div class="p-4 overflow-y-auto max-h-[calc(100vh-120px)] scrollbar-hide pb-12">
       <!-- Loading State -->
       <div v-if="loading" class="flex justify-center items-center h-64">
-        <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-500"></div>
+        <svg class="animate-spin h-10 w-10 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
       </div>
 
       <!-- Error State -->
@@ -42,127 +45,163 @@
       <TransitionGroup
         v-else-if="currentTab === 'Upcoming Appointments'"
         name="list"
-        tag="ul"
-        class="space-y-1"
+        tag="div"
+        class="overflow-x-auto"
       >
-        <li
-          v-for="appointment in upcomingAppointments"
-          :key="appointment.id"
-          class="p-4 hover:bg-emerald-50 rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-200 ease-in-out"
-        >
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-4">
-              <img 
-                :src="getAvatarUrl(appointment.users_info?.fullname)" 
-                :alt="appointment.users_info?.fullname" 
-                class="h-10 w-10 rounded-full"
-              />
-              <div>
-                <p class="font-medium text-gray-900">{{ appointment.users_info?.fullname }}</p>
-                <p class="text-sm text-gray-500">{{ appointment.subject }}</p>
-              </div>
-            </div>
-            <div class="flex items-center space-x-2 px-4">
-              <p class="text-sm font-semibold text-teal-600">
-                {{ formatDate(appointment.preferred_time_date) }}
-              </p>
-              <button
-                @click="openDetailsModal(appointment)"
-                class="text-gray-400 hover:text-emerald-600 transition-colors duration-200"
-              >
-                <InfoIcon class="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-        </li>
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr
+              v-for="appointment in upcomingAppointments"
+              :key="appointment.id"
+              class="hover:bg-emerald-50 transition-all duration-200 ease-in-out"
+            >
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <img 
+                    :src="getAvatarUrl(appointment.users_info?.fullname)" 
+                    :alt="appointment.users_info?.fullname" 
+                    class="h-10 w-10 rounded-full mr-4"
+                  />
+                  <div class="text-sm font-medium text-gray-900">{{ appointment.users_info?.fullname }}</div>
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-500">{{ appointment.subject }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-teal-600">{{ formatDate(appointment.preferred_time_date) }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <button
+                  @click="openDetailsModal(appointment)"
+                  class="text-gray-400 hover:text-emerald-600 transition-colors duration-200"
+                >
+                  <InfoIcon class="h-5 w-5 inline-block" />
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </TransitionGroup>
 
       <!-- Past Appointments -->
       <TransitionGroup
         v-else-if="currentTab === 'Appointment History'"
         name="list"
-        tag="ul"
-        class="space-y-1"
+        tag="div"
+        class="overflow-x-auto"
       >
-        <li
-          v-for="appointment in pastAppointments"
-          :key="appointment.id"
-          class="p-4 hover:bg-emerald-50 rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-200 ease-in-out"
-        >
-          <div class="flex justify-between items-center">
-            <div>
-              <p class="font-medium text-gray-900">{{ appointment.users_info?.fullname }}</p>
-              <p class="text-sm text-gray-500">{{ appointment.subject }}</p>
-            </div>
-            <div class="flex items-center space-x-2">
-              <p class="text-sm font-semibold text-teal-600">
-                {{ formatDate(appointment.preferred_time_date) }}
-              </p>
-              <button
-                @click="openDetailsModal(appointment)"
-                class="text-gray-400 hover:text-emerald-600 transition-colors duration-200"
-              >
-                <InfoIcon class="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-        </li>
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr
+              v-for="appointment in pastAppointments"
+              :key="appointment.id"
+              class="hover:bg-emerald-50 transition-all duration-200 ease-in-out"
+            >
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900">{{ appointment.users_info?.fullname }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-500">{{ appointment.subject }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-teal-600">{{ formatDate(appointment.preferred_time_date) }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <button
+                  @click="openDetailsModal(appointment)"
+                  class="text-gray-400 hover:text-emerald-600 transition-colors duration-200"
+                >
+                  <InfoIcon class="h-5 w-5 inline-block" />
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </TransitionGroup>
 
       <!-- Recent Tutors -->
       <TransitionGroup
         v-else-if="currentTab === 'Recent Tutors'"
         name="list"
-        tag="ul"
-        class="space-y-2"
+        tag="div"
+        class="overflow-x-auto"
       >
-        <li
-          v-for="tutor in recentTutors"
-          :key="tutor.id"
-          class="bg-white p-4 hover:bg-emerald-50 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 ease-in-out"
-        >
-          <div class="flex justify-between items-center">
-            <div class="flex items-center space-x-4">
-              <img 
-                :src="getAvatarUrl(tutor.fullname)" 
-                :alt="tutor.fullname" 
-                class="h-10 w-10 rounded-full"
-              />
-              <div>
-                <p class="font-medium text-gray-900">{{ tutor.fullname }}</p>
-                <p class="text-sm text-gray-500">{{ tutor.lastSubject }}</p>
-              </div>
-            </div>
-            <div class="flex items-center space-x-2">
-              <button
-                v-if="!tutor.userReview"
-                @click="openRateModal(tutor)"
-                class="flex items-center space-x-1 text-gray-400 hover:text-yellow-400 transition-colors duration-200"
-              >
-                <Star class="h-5 w-5" />
-                <span class="text-sm">Rate</span>
-              </button>
-              <div v-else class="flex items-center space-x-2">
-                <div class="flex">
-                  <Star
-                    v-for="i in 5"
-                    :key="i"
-                    :class="[
-                      i <= tutor.userReview.star ? 'text-yellow-400' : 'text-gray-300',
-                      'h-5 w-5'
-                    ]"
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr
+              v-for="tutor in recentTutors"
+              :key="tutor.id"
+              class="hover:bg-emerald-50 transition-all duration-200 ease-in-out"
+            >
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <img 
+                    :src="getAvatarUrl(tutor.fullname)" 
+                    :alt="tutor.fullname" 
+                    class="h-10 w-10 rounded-full mr-4"
                   />
+                  <div class="text-sm font-medium text-gray-900">{{ tutor.fullname }}</div>
                 </div>
-                <button
-                  @click="openEditReviewModal(tutor.id, tutor.userReview.id)"
-                  class="text-gray-400 hover:text-emerald-600 transition-colors duration-200"
-                >
-                  <PencilIcon class="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </li>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-500">{{ tutor.lastSubject }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-right">
+                <div v-if="!tutor.userReview" class="text-sm text-gray-500">
+                  <button
+                    @click="openRateModal(tutor)"
+                    class="inline-flex items-center space-x-1 text-gray-400 hover:text-yellow-400 transition-colors duration-200"
+                  >
+                    <Star class="h-5 w-5 inline-block" />
+                    <span class="text-sm">Rate</span>
+                  </button>
+                </div>
+                <div v-else class="inline-flex items-center space-x-2">
+                  <div class="flex">
+                    <Star
+                      v-for="i in 5"
+                      :key="i"
+                      :class="[
+                        i <= tutor.userReview.star ? 'text-yellow-400' : 'text-gray-300',
+                        'h-5 w-5'
+                      ]"
+                    />
+                  </div>
+                  <button
+                    @click="openEditReviewModal(tutor.id, tutor.userReview.id)"
+                    class="text-gray-400 hover:text-emerald-600 transition-colors duration-200"
+                  >
+                    <PencilIcon class="h-5 w-5 inline-block" />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </TransitionGroup>
     </div>
   </div>
@@ -704,3 +743,4 @@ onMounted(() => {
   scrollbar-width: none;  /* Firefox */
 }
 </style>
+

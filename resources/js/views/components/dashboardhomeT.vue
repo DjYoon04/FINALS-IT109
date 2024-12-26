@@ -30,7 +30,10 @@
     <div class="p-4 overflow-y-auto max-h-[calc(100vh-120px)] scrollbar-hide pb-12">
       <!-- Loading State -->
       <div v-if="loading" class="flex justify-center items-center h-64">
-        <div class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-emerald-500"></div>
+        <svg class="animate-spin h-10 w-10 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
       </div>
 
       <!-- Error State -->
@@ -39,126 +42,102 @@
       </div>
 
       <!-- Upcoming Appointments -->
-      <TransitionGroup
-        v-else-if="currentTab === 'Upcoming Appointments'"
-        name="list"
-        tag="ul"
-        class="space-y-1"
-      >
-        <li
-          v-for="appointment in upcomingAppointments"
-          :key="appointment.id"
-          class="p-4 hover:bg-emerald-50 rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-200 ease-in-out"
-        >
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-4">
-              <img 
-                :src="getAvatarUrl(appointment.users_info?.fullname)" 
-                :alt="appointment.users_info?.fullname" 
-                class="h-10 w-10 rounded-full"
-              />
-              <div>
-                <p class="font-medium text-gray-900">{{ appointment.users_info?.fullname }}</p>
-                <p class="text-sm text-gray-500">{{ appointment.subject }}</p>
-              </div>
-            </div>
-            <div class="flex items-center space-x-2 px-4">
-              <p class="text-sm font-semibold text-teal-600">
-                {{ formatDate(appointment.preferred_time_date) }}
-              </p>
-              <button
-                @click="openDetailsModal(appointment)"
-                class="text-gray-400 hover:text-emerald-600 transition-colors duration-200"
-              >
-                <InfoIcon class="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-        </li>
-      </TransitionGroup>
+      <div v-else-if="currentTab === 'Upcoming Appointments'" class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr v-for="appointment in upcomingAppointments" :key="appointment.id" class="hover:bg-emerald-50 transition-all duration-200 ease-in-out">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <img :src="getAvatarUrl(appointment.users_info?.fullname)" :alt="appointment.users_info?.fullname" class="h-10 w-10 rounded-full mr-3" />
+                  <div class="font-medium text-gray-900">{{ appointment.users_info?.fullname }}</div>
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-500">{{ appointment.subject }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-semibold text-teal-600">{{ formatDate(appointment.preferred_time_date) }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <button @click="openDetailsModal(appointment)" class="text-gray-400 hover:text-emerald-600 transition-colors duration-200">
+                  <InfoIcon class="h-5 w-5 inline-block" />
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
       <!-- Past Appointments -->
-      <TransitionGroup
-        v-else-if="currentTab === 'Appointment History'"
-        name="list"
-        tag="ul"
-        class="space-y-1"
-      >
-        <li
-          v-for="appointment in pastAppointments"
-          :key="appointment.id"
-          class="p-4 hover:bg-emerald-50 rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-200 ease-in-out"
-        >
-          <div class="flex justify-between items-center">
-            <div>
-              <p class="font-medium text-gray-900">{{ appointment.users_info?.fullname }}</p>
-              <p class="text-sm text-gray-500">{{ appointment.subject }}</p>
-            </div>
-            <div class="flex items-center space-x-2">
-              <p class="text-sm font-semibold text-teal-600">
-                {{ formatDate(appointment.preferred_time_date) }}
-              </p>
-              <button
-                @click="openDetailsModal(appointment)"
-                class="text-gray-400 hover:text-emerald-600 transition-colors duration-200"
-              >
-                <InfoIcon class="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-        </li>
-      </TransitionGroup>
+      <div v-else-if="currentTab === 'Appointment History'" class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr v-for="appointment in pastAppointments" :key="appointment.id" class="hover:bg-emerald-50 transition-all duration-200 ease-in-out">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="font-medium text-gray-900">{{ appointment.users_info?.fullname }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-500">{{ appointment.subject }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-semibold text-teal-600">{{ formatDate(appointment.preferred_time_date) }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <button @click="openDetailsModal(appointment)" class="text-gray-400 hover:text-emerald-600 transition-colors duration-200">
+                  <InfoIcon class="h-5 w-5 inline-block" />
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
       <!-- Recent Students -->
-      <TransitionGroup
-        v-else-if="currentTab === 'Recent Students'"
-        name="list"
-        tag="ul"
-        class="space-y-1"
-      >
-        <li
-          v-for="tutor in recentTutors"
-          :key="tutor.id"
-          class="p-4 hover:bg-emerald-50 rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-200 ease-in-out"
-        >
-          <div class="flex items-start space-x-4">
-            <img 
-              :src="getAvatarUrl(tutor.fullname)"
-              :alt="tutor.fullname"
-              class="h-10 w-10 rounded-full"
-            />
-            <div class="flex-grow">
-              <p class="font-medium text-gray-900">{{ tutor.fullname }}</p>
-              <p class="text-sm text-gray-500">{{ tutor.lastSubject }}</p>
-              <div class="mt-2 space-y-2">
-                <div
-                  v-for="review in tutor.review_list"
-                  :key="review.id"
-                  class="flex items-center justify-between bg-gray-50 rounded p-2"
-                >
-                  <div class="flex flex-col">
-                    <div class="flex items-center space-x-1">
-                    </div>
-                    <p class="text-sm text-gray-700 mt-1">{{ review.comments }}</p>
-                  </div>
-                  <button
-                    @click="openEditReviewModal(tutor.id, review.id)"
-                    class="text-gray-400 hover:text-emerald-600 transition-colors duration-200"
-                  >
-                    <PencilIcon class="h-4 w-4" />
-                  </button>
+      <div v-else-if="currentTab === 'Recent Students'" class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr v-for="tutor in recentTutors" :key="tutor.id" class="hover:bg-emerald-50 transition-all duration-200 ease-in-out">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <img :src="getAvatarUrl(tutor.fullname)" :alt="tutor.fullname" class="h-10 w-10 rounded-full mr-3" />
+                  <div class="font-medium text-gray-900">{{ tutor.fullname }}</div>
                 </div>
-              </div>
-            </div>
-            <button
-              @click="openRateModal(tutor)"
-              class="flex items-center space-x-1 bg-emerald-100 text-teal-700 px-3 mt-2 py-2 rounded-lg text-sm font-medium hover:bg-emerald-200 transition-colors duration-200"
-            >
-              <span>Comment</span>
-            </button>
-          </div>
-        </li>
-      </TransitionGroup>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-500">{{ tutor.lastSubject }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <button @click="openRateModal(tutor)" class="bg-emerald-100 text-teal-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-emerald-200 transition-colors duration-200">
+                  Comment
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
   
@@ -223,6 +202,7 @@
   </TransitionRoot>
 
   <!-- Rate Modal -->
+  <!-- Rate Modal -->
   <TransitionRoot appear :show="isRateModalVisible" as="template">
     <Dialog as="div" @close="closeRateModal" class="relative z-10">
       <TransitionChild
@@ -250,20 +230,9 @@
           >
             <DialogPanel class="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
               <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900">
-                Comment {{ selectedTutor?.fullname }}
+                Rate {{ selectedTutor?.fullname }}
               </DialogTitle>
               <div class="mt-4">
-                <div class="flex items-center justify-center space-x-2">
-                  <Star
-                    v-for="i in 5"
-                    :key="i"
-                    :class="[
-                      i <= rating ? 'text-yellow-400' : 'text-gray-300',
-                      'h-8 w-8 fill-current cursor-pointer transition-colors duration-150'
-                    ]"
-                    @click="rating = i"
-                  />
-                </div>
                 <textarea
                   v-model="newComment"
                   rows="4"
@@ -289,7 +258,7 @@
                 </button>
               </div>
             </DialogPanel>
-          </TransitionChild>
+          </TransitionChild>  
         </div>
       </div>
     </Dialog>
@@ -326,17 +295,6 @@
                 Edit Review
               </DialogTitle>
               <div class="mt-4">
-                <div class="flex items-center justify-center space-x-2">
-                  <Star
-                    v-for="i in 5"
-                    :key="i"
-                    :class="[
-                      i <= editedRating ? 'text-yellow-400' : 'text-gray-300',
-                      'h-8 w-8 fill-current cursor-pointer transition-colors duration-150'
-                    ]"
-                    @click="editedRating = i"
-                  />
-                </div>
                 <textarea
                   v-model="editedComment"
                   rows="4"
@@ -585,7 +543,7 @@ function closeEditReviewModal() {
 }
 
 async function submitRating() {
-  if (selectedTutor.value && rating.value > 0) {
+  if (selectedTutor.value) {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       const { data: userInfo } = await supabase
@@ -610,14 +568,25 @@ async function submitRating() {
       const { data, error } = await supabase
         .from('review_list')
         .insert({
-          users_info_id: userInfo.id,
+          users_info_id: selectedTutor.value.id,  // This should be the tutor's ID
           reviews_id: reviewData.id,
-          users_info_id: selectedTutor.value.id  // Add this line to associate with the tutor
         });
 
       if (error) throw error;
 
-      await fetchAppointments();
+      // Update the local state to reflect the new review
+      const updatedTutor = recentTutors.value.find(t => t.id === selectedTutor.value.id);
+      if (updatedTutor) {
+        if (!updatedTutor.review_list) {
+          updatedTutor.review_list = [];
+        }
+        updatedTutor.review_list.push({
+          id: reviewData.id,
+          star: rating.value,
+          comments: newComment.value.trim() || null
+        });
+      }
+
       closeRateModal();
     } catch (error) {
       console.error('Error submitting rating:', error);
@@ -626,45 +595,69 @@ async function submitRating() {
 }
 
 async function saveEditedReview() {
-  if (editingReviewId.value && editedRating.value > 0) {
+  if (editingReviewId.value) {
     try {
+      // Update the review in the reviews table
       const { data, error } = await supabase
-        .from('review_list')
+        .from('reviews')
         .update({
-          star: editedRating.value,
           comments: editedComment.value.trim() || null,
         })
-        .eq('id', editingReviewId.value);
+        .eq('id', editingReviewId.value)
+        .select()
+        .single();
 
       if (error) throw error;
 
-      // Refresh the tutors data to show the updated rating
-      await fetchAppointments();
+      // Update the local state
+      const updatedTutor = recentTutors.value.find(tutor => 
+        tutor.review_list.some(review => review.id === editingReviewId.value)
+      );
+      if (updatedTutor) {
+        const reviewIndex = updatedTutor.review_list.findIndex(review => review.id === editingReviewId.value);
+        if (reviewIndex !== -1) {
+          updatedTutor.review_list[reviewIndex].comments = editedComment.value.trim() || null;
+        }
+      }
+
       closeEditReviewModal();
     } catch (error) {
-      console.error('Error updating review:', error);
+      console.error('Error in saveEditedReview:', error);
+      alert(`Failed to save review: ${error.message}`);
     }
   }
 }
 
 async function deleteReview() {
-  if (editingReviewId.value) {
-    try {
-      const { data, error } = await supabase
-        .from('review_list')
-        .delete()
-        .eq('id', editingReviewId.value);
+  if (!editingReviewId.value) {
+    alert('No review selected for deletion');
+    return;
+  }
 
-      if (error) throw error;
+  try {
+    // Delete the review from the reviews table
+    const { error: deleteReviewError } = await supabase
+      .from('reviews')
+      .delete()
+      .eq('id', editingReviewId.value);
 
-      // Refresh the tutors data to remove the deleted review
-      await fetchAppointments();
-      closeEditReviewModal();
-    } catch (error) {
-      console.error('Error deleting review:', error);
-    }
+    if (deleteReviewError) throw deleteReviewError;
+
+    // Update the local state to remove the deleted review
+    recentTutors.value = recentTutors.value.map(tutor => ({
+      ...tutor,
+      review_list: tutor.review_list.filter(review => review.id !== editingReviewId.value)
+    }));
+
+    closeEditReviewModal();
+    alert('Review successfully deleted');
+  } catch (error) {
+    console.error('Error in deleteReview:', error);
+    alert(`Failed to delete review: ${error.message}`);
   }
 }
+
+
 
 // Fetch initial data
 onMounted(() => {
@@ -693,4 +686,3 @@ onMounted(() => {
   scrollbar-width: none;  /* Firefox */
 }
 </style>
-

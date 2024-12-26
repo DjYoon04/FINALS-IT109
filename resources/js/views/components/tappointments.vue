@@ -1,34 +1,46 @@
 <template>
-  <div class="bg-white rounded-[30px] shadow-xl overflow-hidden h-full">
-    <h2 class="text-3xl font-bold text-teal-700 px-6 pb-6 pt-4 text-center">My Appointments</h2>
-    <div v-if="loading" class="p-6 text-center flex flex-col items-center justify-center">
-      <img :src="bookanimation" alt="Tutor illustration" class="w-14 h-14 object-cover" />
-      <p class="mt-2 text-emerald-600">Loading appointments...</p>
+  <div class="bg-white rounded-[30px] shadow-xl overflow-hidden h-full flex flex-col">
+    <h2 class="text-2xl md:text-3xl font-bold text-teal-700 px-4 md:px-6 pb-4 md:pb-6 pt-4 text-center">My Appointments</h2>
+    <div v-if="loading" class="flex justify-center items-center p-4 md:p-6">
+      <svg class="animate-spin h-10 w-10 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <span class="ml-3 text-emerald-600 font-medium">Loading appointments...</span>
     </div>
-    <div v-else-if="error" class="p-6 text-center">
+    <div v-else-if="error" class="p-4 md:p-6 text-center">
       <AlertCircleIcon class="inline-block w-8 h-8 text-red-500 mb-2" />
       <p class="text-red-600">{{ error }}</p>
     </div>
-    <ul v-else class="divide-y divide-emerald-100 max-h-full overflow-y-auto [&::-webkit-scrollbar]:w-2 pb-20 scrollbar-hide">
-      <li
-        v-for="appointment in sortedAppointments"
-        :key="appointment.id"
-        class="p-6 hover:bg-emerald-50 transition duration-300 ease-in-out"
-      >
-         <div class="flex items-center justify-between">
-          <div class="flex items-center space-x-4">
-            <img 
-              :src="getAvatarUrl(appointment.student_info?.fullname)" 
-              :alt="appointment.student_info?.fullname" 
-              class="h-10 w-10 rounded-full"
-            />
-            <div>
-              <p class="font-medium text-gray-900">{{ appointment.student_info?.fullname }}</p>
-              <div class="flex items-center">
-                <p class="text-sm text-gray-500">{{ appointment.subject }}</p>
+    <div v-else class="flex-grow overflow-hidden">
+      <div class="h-full overflow-y-auto scrollbar-hide">
+        <table class="min-w-full divide-y divide-emerald-100">
+          <thead class="bg-emerald-50">
+            <tr>
+              <th scope="col" class="px-3 md:px-6 py-3 text-left text-xs font-medium text-emerald-700 uppercase tracking-wider">Name</th>
+              <th scope="col" class="px-3 md:px-6 py-3 text-left text-xs font-medium text-emerald-700 uppercase tracking-wider">Subject</th>
+              <th scope="col" class="px-3 md:px-6 py-3 text-left text-xs font-medium text-emerald-700 uppercase tracking-wider">Status</th>
+              <th scope="col" class="px-3 md:px-6 py-3 text-left text-xs font-medium text-emerald-700 uppercase tracking-wider">Date</th>
+              <th scope="col" class="px-3 md:px-6 py-3 text-left text-xs font-medium text-emerald-700 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-emerald-100">
+            <tr v-for="appointment in sortedAppointments" :key="appointment.id" class="hover:bg-emerald-50 transition duration-300 ease-in-out">
+              <td class="px-3 md:px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <img :src="getAvatarUrl(appointment.student_info?.fullname)" :alt="appointment.student_info?.fullname" class="h-8 w-8 md:h-10 md:w-10 rounded-full" />
+                  <div class="ml-2 md:ml-4">
+                    <div class="text-sm font-medium text-gray-900">{{ appointment.student_info?.fullname }}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="px-3 md:px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">{{ appointment.subject }}</div>
+              </td>
+              <td class="px-3 md:px-6 py-4 whitespace-nowrap">
                 <span
                   :class="{
-                    'ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full': true,
+                    'px-2 inline-flex text-xs leading-5 font-semibold rounded-full': true,
                     'bg-yellow-100 text-yellow-800': appointment.isCompleted === null,
                     'bg-green-100 text-green-800': appointment.isCompleted === true,
                     'bg-red-100 text-red-800': appointment.isCompleted === false
@@ -36,23 +48,23 @@
                 >
                   {{ appointment.isCompleted === null ? 'Pending' : (appointment.isCompleted ? 'Accepted' : 'Declined') }}
                 </span>
-              </div>
-            </div>
-          </div>
-          <div class="flex items-center space-x-2 px-4">
-            <p class="text-sm font-semibold text-teal-600">
-              {{ formatDate(appointment.preferred_time_date) }}
-            </p>
-            <button
-              @click="viewDetails(appointment)"
-              class="text-gray-400 hover:text-emerald-600 transition-colors duration-200"
-            >
-              <InfoIcon class="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-      </li>
-    </ul>
+              </td>
+              <td class="px-3 md:px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">{{ formatDate(appointment.preferred_time_date) }}</div>
+              </td>
+              <td class="px-3 md:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <button
+                  @click="viewDetails(appointment)"
+                  class="text-emerald-600 hover:text-emerald-900 flex items-center justify-center"
+                >
+                  <InfoIcon class="h-5 w-5 ml-4" />
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <!-- Modal -->
@@ -142,7 +154,6 @@ import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } fro
 import { AlertCircleIcon, InfoIcon } from 'lucide-vue-next'
 import { supabase } from "@/supabaseClient"
 
-const bookanimation = '/img/book.gif'
 const appointments = ref([])
 const loading = ref(true)
 const error = ref(null)
@@ -289,14 +300,21 @@ onMounted(() => {
 })
 </script>
 
-<style>
+<style scoped>
+@media (max-width: 640px) {
+  table {
+    font-size: 0.75rem;
+  }
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
 
+/* Hide scrollbar for IE, Edge and Firefox */
 .scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }
 </style>
-

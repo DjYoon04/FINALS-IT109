@@ -19,19 +19,18 @@
         <div class="hidden sm:ml-2 sm:flex sm:items-center pr-3">
           <!-- Sign In / Sign Up buttons -->
           <router-link
-            :to="{ name: 'Auth', query: { mode: 'signin' } }"
+            :to="{ name: 'Auth' }"
             class="mr-4 rounded-lg text-emerald-700 hover:text-emerald-600"
           >
             Login
           </router-link>
           <router-link
-            :to="{ name: 'Auth', query: { mode: 'signup' } }"
+            :to="{ name: 'Auth' }"
             class="mx-2 rounded-xl bg-teal-700 hover:bg-emerald-600 text-white p-2 px-3"
           >
             Sign up
           </router-link>
         </div>
-    
         <button
           class="lg:hidden p-2 text-gray-600 rounded-lg hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200"
           @click="toggleNav"
@@ -63,24 +62,22 @@
       </ul>
       <div class="flex flex-col gap-2 px-1">
         <router-link
-            :to="{ name: 'Auth', query: { mode: 'signin' } }"
+            :to="{ name: 'Auth' }"
             class="block py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
           >
             Log In
           </router-link>
           <router-link
-            :to="{ name: 'Auth', query: { mode: 'signup' } }"
+            :to="{ name: 'Auth' }"
             class="block py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
           >
             Sign Up
           </router-link>
       </div>
     </div>
-
-    <Signin :isVisible="showSignin" @close="showSignin = false" />
-    <Signup :isVisible="showSignup" @close="showSignup = false" />
   </nav>
 </template>
+
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
